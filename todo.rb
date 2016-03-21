@@ -54,19 +54,28 @@ end
 
 # View the contents of one list
 get '/lists/:id' do
-  id = params[:id].to_i
-  @list = session[:lists][id]
+  @list_id = params[:id].to_i
+  @list = session[:lists][@list_id]
 
   erb :list, layout: :layout
 end
 
-post '/lists/:id/todos' do
-  todo = params[:todo]
-  id = params[:id].to_i
-  list = session[:lists][id]
-  list[:todos] << todo
+# Add a new todo to a list
+post '/lists/:list_id/todos' do
+  todo_name = params[:todo].strip
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+
+  error = error_for_todo(todo_name, @list)
+  if error
+    session[:error] = error
+    erb :list, layout: :layout
+  else
+    @list[:todos] << { name: todo_name, completed: false }
+    session[:success] = 'The todo was added.'
     
-  redirect "/lists/#{id}"
+    redirect "/lists/#{@list_id}"
+  end
 end
 
 # View the form for editing a list
@@ -105,13 +114,18 @@ end
 
 helpers do
   # Return an error message if name is invalid
-  def error_for_list_name(list_name)
-    if !(1..200).cover? list_name.size
-      return 'List name must be between 1 and 200 characters'
-    elsif session[:lists].any? { |list| list[:name] == list_name }
-      return 'List name must be unique.'
+  def error_for_list_name(name)
+    if !(1..200).cover? name.size
+      'List name must be between 1 and 200 characters'
+    elsif session[:lists].any? { |list| list[:name] == name }
+      'List name must be unique.'
     end
+  end
 
-    nil
+  # Return an error if name is invalid
+  def error_for_todo(name, list)
+    if !(1..200).cover? name.size
+      return 'Todo name must be between 1 and 200 characters'
+    end
   end
 end
