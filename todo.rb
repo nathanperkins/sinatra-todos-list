@@ -78,6 +78,17 @@ post '/lists/:list_id/todos' do
   end
 end
 
+post '/lists/:list_id/todos/:todo_id/destroy' do
+  list_id = params[:list_id].to_i
+  list = session[:lists][list_id]
+  todo_id = params[:todo_id].to_i
+
+  deleted_todo = list[:todos].delete_at(todo_id)
+  session[:success] = "\"#{deleted_todo[:name]}\" has been deleted."
+
+  redirect "/lists/#{list_id}"
+end
+
 # View the form for editing a list
 get '/lists/:id/edit' do
   id = params[:id].to_i
