@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/content_for'
 require 'tilt/erubis'
 
 if development?
@@ -27,6 +28,7 @@ end
 # View list of lists
 get '/lists' do
   @lists = session[:lists]
+
   erb :lists, layout: :layout
 end
 
@@ -50,10 +52,46 @@ post '/lists' do
   end
 end
 
+# View the contents of one list
 get '/lists/:id' do
   id = params[:id].to_i
   @list = session[:lists][id]
+
   erb :list, layout: :layout
+end
+
+# View the form for editing a list
+get '/lists/:id/edit' do
+  id = params[:id].to_i
+  @list = session[:lists][id]
+
+  erb :edit_list, layout: :layout
+end
+
+# Update an existing todo list
+post '/lists/:id' do
+  list_name = params[:list_name].strip
+  id = params[:id].to_i
+  @list = session[:lists][id]
+
+  error = error_for_list_name(list_name)
+  if error
+    session[:error] = error
+    erb :edit_list, layout: :layout
+  else
+    @list[:name] = list_name
+    session[:success] = 'The list name has been updated.'
+    redirect "/lists/#{id}"
+  end
+end
+
+# Delete the specified list.
+post '/lists/:id/destroy' do
+  id = params[:id].to_i
+  deleted_list = session[:lists].delete_at(id)
+  session[:success] = "The \"#{deleted_list[:name]}\" list has been deleted."
+
+  redirect '/lists'
 end
 
 helpers do

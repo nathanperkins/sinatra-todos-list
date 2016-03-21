@@ -210,7 +210,7 @@ form fieldset.actions a:hover {
   display: inline-block;
   width: 5%;
   font-size: 0.9em;
-  text-align: right;
+  float: right;
   color: #666666;
 }
 
