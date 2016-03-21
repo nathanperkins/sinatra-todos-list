@@ -66,14 +66,14 @@ post '/lists/:list_id/todos' do
   @list_id = params[:list_id].to_i
   @list = session[:lists][@list_id]
 
-  error = error_for_todo(todo_name, @list)
+  error = error_for_todo(todo_name)
   if error
     session[:error] = error
     erb :list, layout: :layout
   else
     @list[:todos] << { name: todo_name, completed: false }
     session[:success] = 'The todo was added.'
-    
+
     redirect "/lists/#{@list_id}"
   end
 end
@@ -134,8 +134,8 @@ helpers do
   end
 
   # Return an error if name is invalid
-  def error_for_todo(name, list)
-    if !(1..200).cover? name.size
+  def error_for_todo(name)
+    unless (1..200).cover? name.size
       return 'Todo name must be between 1 and 200 characters'
     end
   end
