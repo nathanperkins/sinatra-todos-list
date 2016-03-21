@@ -60,6 +60,15 @@ get '/lists/:id' do
   erb :list, layout: :layout
 end
 
+post '/lists/:id/todos' do
+  todo = params[:todo]
+  id = params[:id].to_i
+  list = session[:lists][id]
+  list[:todos] << todo
+    
+  redirect "/lists/#{id}"
+end
+
 # View the form for editing a list
 get '/lists/:id/edit' do
   id = params[:id].to_i
