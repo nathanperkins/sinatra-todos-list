@@ -1,6 +1,10 @@
 require 'sinatra'
-require 'sinatra/reloader'
 require 'tilt/erubis'
+
+if development?
+  require 'sinatra/reloader'
+  require 'pry'
+end
 
 configure do
   enable :sessions
@@ -44,6 +48,12 @@ post '/lists' do
     session[:success] = 'The list has been created.'
     redirect '/lists'
   end
+end
+
+get '/lists/:id' do
+  id = params[:id].to_i
+  @list = session[:lists][id]
+  erb :list, layout: :layout
 end
 
 helpers do
