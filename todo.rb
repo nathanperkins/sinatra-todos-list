@@ -134,10 +134,10 @@ post '/lists/:list_id/complete_all' do
   if params[:complete_all] == 'true'
     list_id = params[:list_id].to_i
     list = session[:lists][list_id]
-    
+
     list[:todos].each { |todo| todo[:completed] = true }
     session[:success] = 'All todos were marked completed.'
-    
+
     redirect "/lists/#{list_id}"
   end
 end
@@ -167,13 +167,13 @@ helpers do
       return 'Todo name must be between 1 and 200 characters'
     end
   end
-  
+
   def count_completed(list)
     list[:todos].count { |todo| todo[:completed] }
   end
-  
+
   def all_completed?(list)
     todos = list[:todos]
-    todos.size > 0 && count_completed(list) == todos.size
+    !todos.empty? && count_completed(list) == todos.size
   end
 end
