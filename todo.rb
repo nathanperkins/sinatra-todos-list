@@ -11,7 +11,7 @@ end
 configure do
   enable :sessions
   set :session_secret, 'secret'
-  set :erb, :escape_html => true
+  set :erb, escape_html: true
 end
 
 before do
@@ -176,8 +176,10 @@ helpers do
   end
 
   # Yields the list and index in order: incomplete lists then complete lists
-  def sort_lists(lists, &block)
-    complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) }
+  def sort_lists(lists, &_block)
+    complete_lists, incomplete_lists = lists.partition do |list|
+      list_complete?(list)
+    end
 
     incomplete_lists.each { |list| yield list, lists.index(list) }
     complete_lists.each { |list| yield list, lists.index(list) }
@@ -186,8 +188,10 @@ helpers do
   end
 
   # Yields the todo and index in order: incomplete todos then complete todos
-  def sort_todos(todos, &block)
-    complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] }
+  def sort_todos(todos, &_block)
+    complete_todos, incomplete_todos = todos.partition do |todo|
+      todo[:completed]
+    end
 
     incomplete_todos.each { |todo| yield todo, todos.index(todo) }
     complete_todos.each { |todo| yield todo, todos.index(todo) }
@@ -200,7 +204,7 @@ helpers do
     list = session[:lists][index] if index
     return list if list
 
-    session[:error] = "The specified list was not found."
+    session[:error] = 'The specified list was not found.'
     redirect '/lists'
     halt
   end
