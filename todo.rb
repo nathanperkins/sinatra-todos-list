@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'sinatra/content_for'
 require 'tilt/erubis'
+require 'rack'
 
 if development?
   require 'sinatra/reloader'
@@ -10,6 +11,7 @@ end
 configure do
   enable :sessions
   set :session_secret, 'secret'
+  set :erb, :escape_html => true
 end
 
 before do
@@ -55,7 +57,7 @@ end
 # View the contents of one list
 get '/lists/:list_id' do
   @list_id = params[:list_id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
 
   erb :list, layout: :layout
 end
@@ -64,7 +66,7 @@ end
 post '/lists/:list_id/todos' do
   todo_name = params[:todo].strip
   @list_id = params[:list_id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
 
   error = error_for_todo(todo_name)
   if error
@@ -81,7 +83,7 @@ end
 # Delete the todo from the list
 post '/lists/:list_id/todos/:todo_id/destroy' do
   list_id = params[:list_id].to_i
-  list = session[:lists][list_id]
+  list = load_list(list_id)
   todo_id = params[:todo_id].to_i
 
   deleted_todo = list[:todos].delete_at(todo_id)
@@ -93,7 +95,7 @@ end
 # Update the status of the todo
 post '/lists/:list_id/todos/:todo_id' do
   list_id = params[:list_id].to_i
-  list = session[:lists][list_id]
+  list = load_list(list_id)
 
   todo_id = params[:todo_id].to_i
   todo = list[:todos][todo_id]
@@ -107,7 +109,7 @@ end
 # View the form for editing a list
 get '/lists/:list_id/edit' do
   list_id = params[:list_id].to_i
-  @list = session[:lists][list_id]
+  @list = load_list(list_id)
 
   erb :edit_list, layout: :layout
 end
@@ -116,7 +118,7 @@ end
 post '/lists/:list_id' do
   list_name = params[:list_name].strip
   list_id = params[:list_id].to_i
-  @list = session[:lists][list_id]
+  @list = load_list(list_id)
 
   error = error_for_list_name(list_name)
   if error
@@ -133,7 +135,7 @@ end
 post '/lists/:list_id/complete_all' do
   if params[:complete_all] == 'true'
     list_id = params[:list_id].to_i
-    list = session[:lists][list_id]
+    list = load_list(list_id)
 
     list[:todos].each { |todo| todo[:completed] = true }
     session[:success] = 'All todos were marked completed.'
@@ -157,6 +159,7 @@ helpers do
     list[:todos].count
   end
 
+  # returns the number of todos that are not completed in the list
   def todos_remaining_count(list)
     list[:todos].count { |todo| !todo[:completed] }
   end
@@ -167,10 +170,12 @@ helpers do
     !todos.empty? && todos_remaining_count(list).zero?
   end
 
+  # Provides the class of the list to the views
   def list_class(list)
     'complete' if list_complete?(list)
   end
 
+  # Yields the list and index in order: incomplete lists then complete lists
   def sort_lists(lists, &block)
     complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) }
 
@@ -180,6 +185,7 @@ helpers do
     lists
   end
 
+  # Yields the todo and index in order: incomplete todos then complete todos
   def sort_todos(todos, &block)
     complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] }
 
@@ -187,6 +193,21 @@ helpers do
     complete_todos.each { |todo| yield todo, todos.index(todo) }
 
     todos
+  end
+
+  # Loads a list if the index is correct
+  def load_list(index)
+    list = session[:lists][index] if index
+    return list if list
+
+    session[:error] = "The specified list was not found."
+    redirect '/lists'
+    halt
+  end
+
+  # Santizes HTML content
+  def h(content)
+    Rack::Utils.escape_html(content)
   end
 end
 
