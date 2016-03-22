@@ -152,28 +152,38 @@ post '/lists/:list_id/destroy' do
 end
 
 helpers do
-  # Return an error message if name is invalid
-  def error_for_list_name(name)
-    if !(1..200).cover? name.size
-      'List name must be between 1 and 200 characters'
-    elsif session[:lists].any? { |list| list[:name] == name }
-      'List name must be unique.'
-    end
-  end
-
-  # Return an error if name is invalid
-  def error_for_todo(name)
-    unless (1..200).cover? name.size
-      return 'Todo name must be between 1 and 200 characters'
-    end
-  end
-
-  def count_completed(list)
+  # Returns number of completed todos in the list.
+  def todos_count(list)
     list[:todos].count { |todo| todo[:completed] }
   end
 
-  def all_completed?(list)
+  def todos_remaining_count(list)
+    list[:todos].count { |todo| !todo[:completed] }
+  end
+
+  # Returns true if all todos in list are completed.
+  def list_complete?(list)
     todos = list[:todos]
-    !todos.empty? && count_completed(list) == todos.size
+    !todos.empty? && todos_remaining_count(list).zero?
+  end
+
+  def list_class(list)
+    'complete' if list_complete?(list)
+  end
+end
+
+# Return an error message if name is invalid
+def error_for_list_name(name)
+  if !(1..200).cover? name.size
+    'List name must be between 1 and 200 characters'
+  elsif session[:lists].any? { |list| list[:name] == name }
+    'List name must be unique.'
+  end
+end
+
+# Return an error if name is invalid
+def error_for_todo(name)
+  unless (1..200).cover? name.size
+    return 'Todo name must be between 1 and 200 characters'
   end
 end
