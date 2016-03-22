@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'sinatra/content_for'
 require 'tilt/erubis'
+require 'rack'
 
 if development?
   require 'sinatra/reloader'
@@ -10,6 +11,7 @@ end
 configure do
   enable :sessions
   set :session_secret, 'secret'
+  set :erb, :escape_html => true
 end
 
 before do
@@ -157,6 +159,7 @@ helpers do
     list[:todos].count
   end
 
+  # returns the number of todos that are not completed in the list
   def todos_remaining_count(list)
     list[:todos].count { |todo| !todo[:completed] }
   end
@@ -167,10 +170,12 @@ helpers do
     !todos.empty? && todos_remaining_count(list).zero?
   end
 
+  # Provides the class of the list to the views
   def list_class(list)
     'complete' if list_complete?(list)
   end
 
+  # Yields the list and index in order: incomplete lists then complete lists
   def sort_lists(lists, &block)
     complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) }
 
@@ -180,6 +185,7 @@ helpers do
     lists
   end
 
+  # Yields the todo and index in order: incomplete todos then complete todos
   def sort_todos(todos, &block)
     complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] }
 
@@ -187,6 +193,11 @@ helpers do
     complete_todos.each { |todo| yield todo, todos.index(todo) }
 
     todos
+  end
+
+  # Santizes HTML content
+  def h(content)
+    Rack::Utils.escape_html(content)
   end
 end
 
