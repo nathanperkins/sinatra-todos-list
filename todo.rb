@@ -154,7 +154,7 @@ end
 helpers do
   # Returns number of completed todos in the list.
   def todos_count(list)
-    list[:todos].count { |todo| todo[:completed] }
+    list[:todos].count
   end
 
   def todos_remaining_count(list)
