@@ -167,4 +167,13 @@ helpers do
       return 'Todo name must be between 1 and 200 characters'
     end
   end
+  
+  def count_completed(list)
+    list[:todos].count { |todo| todo[:completed] }
+  end
+  
+  def all_completed?(list)
+    todos = list[:todos]
+    todos.size > 0 && count_completed(list) == todos.size
+  end
 end
