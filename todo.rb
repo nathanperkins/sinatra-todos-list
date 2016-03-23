@@ -87,9 +87,13 @@ post '/lists/:list_id/todos/:todo_id/destroy' do
   todo_id = params[:todo_id].to_i
 
   deleted_todo = list[:todos].delete_at(todo_id)
-  session[:success] = "\"#{deleted_todo[:name]}\" has been deleted."
 
-  redirect "/lists/#{list_id}"
+  if env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
+    status 204
+  else
+    session[:success] = "\"#{deleted_todo[:name]}\" has been deleted."
+    redirect "/lists/#{list_id}"
+  end
 end
 
 # Update the status of the todo
@@ -150,7 +154,11 @@ post '/lists/:list_id/destroy' do
   deleted_list = session[:lists].delete_at(list_id)
   session[:success] = "The \"#{deleted_list[:name]}\" list has been deleted."
 
-  redirect '/lists'
+  if env['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'
+    '/lists'
+  else
+    redirect '/lists'
+  end
 end
 
 helpers do

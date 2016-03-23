@@ -7,8 +7,6 @@ $(function(){
     var ok = confirm('Are you sure? This cannot be undone!')
 
     if (ok) {
-      // this.submit();
-
       var form = $(this)
 
       var request = $.ajax({
@@ -17,7 +15,11 @@ $(function(){
       });
 
       request.done(function(data, textStatus, jqHXR){
-        form.parent('li').remove();
+        if (jqHXR.status == 204) {
+          form.parent('li').remove();
+        } else if (jqHXR.status == 200) {
+          document.location = data;
+        }
       });
 
       request.fail(function(){
